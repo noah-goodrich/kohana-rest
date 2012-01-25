@@ -1,5 +1,5 @@
 <?php
-abstract class Kohana_Controller_API extends OAuth2_Controller
+abstract class Kohana_Controller_Api extends Controller
 {
 	/**
 	 * @var Object Request Payload
@@ -192,7 +192,7 @@ abstract class Kohana_Controller_API extends OAuth2_Controller
 		else
 		{
 			/**
-			 * @todo .. HTTP_Exception_405 is more approperiate, sometimes.
+			 * @todo .. HTTP_Exception_405 is more appropriate, sometimes.
 			 * Need to figure out a way to decide which to send...
 			 */
 			throw new HTTP_Exception_404('The requested URL :uri was not found on this server.', array(

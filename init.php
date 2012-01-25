@@ -13,9 +13,17 @@ Response::$messages[507] = 'Insufficient Storage';
  * Routes
  */
 
-Route::set('api', 'api/<controller>(/<id>)(/<custom>)', array('id' => '\d+'))
-	->defaults(array(
+/*Route::set
+(
+	'api', '<controller>(/<id>)(/<custom>)', array('id' => '\d+')
+)
+->subdomains(array('api'))
+->defaults
+(
+	array
+	(
 		'directory'  => 'api',
 		'id'         => FALSE,
-		'action'     => 'index',
-	));
+		'action'     => 'index'
+	)
+);*/

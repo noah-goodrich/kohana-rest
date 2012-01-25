@@ -1,2 +1,2 @@
 <?php
-abstract class Controller_API extends Kohana_Controller_API {}
+abstract class Controller_Api extends Kohana_Controller_Api {}
