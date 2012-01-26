@@ -241,12 +241,12 @@ abstract class Kohana_Controller_Api extends Controller
 		}
 	}
 
-	protected function _generate_link($method, $uri, $type, $parameters = NULL)
+	protected function _link($method, $rel, $uri, $parameters = NULL)
 	{
 		$link = array(
 			'method'     => $method,
 			'url'        => $uri,
-			'type'       => $type,
+			'rel'       => $rel,
 			'parameters' => array(),
 		);
 
@@ -266,5 +266,23 @@ abstract class Kohana_Controller_Api extends Controller
 		}
 
 		return $link;
+	}
+
+	protected function _get_page()
+	{
+		$offset = Arr::get($_GET, 'offset', 1);
+		$limit = Arr::get($_GET, 'limit', 100);
+
+		if($offset < 1)
+		{
+			$offset = 1;
+		}
+
+		if($limit > 100)
+		{
+			$limit = 100;
+		}
+
+		return array($offset, $limit);
 	}
 }
