@@ -241,12 +241,12 @@ abstract class Kohana_Controller_Api extends Controller
 		}
 	}
 
-	protected function _link($method, $rel, $uri, $parameters = NULL)
+	protected function _link($method, $uri, $parameters = null, $type = null)
 	{
 		$link = array(
 			'method'     => $method,
 			'url'        => $uri,
-			'rel'       => $rel,
+			'type'       => $type,
 			'parameters' => array(),
 		);
 
