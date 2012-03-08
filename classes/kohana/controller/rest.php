@@ -1,5 +1,5 @@
 <?php
-abstract class Kohana_Controller_Api extends Controller
+abstract class Kohana_Controller_Rest extends Controller
 {
 	/**
 	 * @var Object Request Payload
