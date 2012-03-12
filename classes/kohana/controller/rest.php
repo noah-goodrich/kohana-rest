@@ -141,7 +141,7 @@ abstract class Kohana_Controller_Rest extends Controller
 	{
 		try
 		{
-			if($this->request_format == 'html')
+			if($this->_request_format == 'html')
 			{
 				$content_type = 'text/html';
 
