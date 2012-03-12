@@ -4,12 +4,14 @@ abstract class Kohana_Controller_Rest extends Controller
 	/**
 	 * @var Object Request Payload
 	 */
-	protected $_request_payload = NULL;
+	protected $_request_payload = null;
+
+	protected $_request_format = null;
 
 	/**
 	 * @var Object Response Payload
 	 */
-	protected $_response_payload = NULL;
+	protected $_response_payload = null;
 
 	/**
 	 * @var array Response Metadata
@@ -92,6 +94,8 @@ abstract class Kohana_Controller_Rest extends Controller
 		{
 			$this->_parse_request_body();
 		}
+
+		$this->_request_format = $this->request->param('format');
 	}
 
 	/**
@@ -137,17 +141,29 @@ abstract class Kohana_Controller_Rest extends Controller
 	{
 		try
 		{
+			if($this->request_format == 'html')
+			{
+				$content_type = 'text/html';
+
+				$this->response->body($this->_response_payload);
+			}
+			else
+			{
+				$content_type = 'application/json';
+
+				$response = array (
+					'metadata' => $this->_response_metadata,
+					'links'    => $this->_response_links,
+					'payload'  => $this->_response_payload
+				);
+
+				// Format the reponse as JSON
+				$this->response->body(json_encode($response));
+			}
+
 			// Set the correct content-type header
-			$this->response->headers('Content-Type', 'application/json');
+			$this->response->headers('Content-Type', $content_type);
 
-			$response = array (
-				'metadata' => $this->_response_metadata,
-				'links'    => $this->_response_links,
-				'payload'  => $this->_response_payload
-			);
-
-			// Format the reponse as JSON
-			$this->response->body(json_encode($response));
 		}
 		catch (Exception $e)
 		{
