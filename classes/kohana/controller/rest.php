@@ -286,7 +286,7 @@ abstract class Kohana_Controller_Rest extends Controller
 
 	protected function _get_page()
 	{
-		$offset = Arr::get($_GET, 'offset', 1);
+		$offset = Arr::get($_GET, 'offset', 0);
 		$limit = Arr::get($_GET, 'limit', 100);
 
 		if($offset < 0)
