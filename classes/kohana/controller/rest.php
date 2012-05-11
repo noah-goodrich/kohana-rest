@@ -8,6 +8,14 @@ abstract class Kohana_Controller_Rest extends Controller
 
 	protected $_request_format = null;
 
+	protected $_response_code = 200;
+
+	protected $_response_headers = array
+	(
+		'cache-control' => 'no-cache, no-store, max-age=0, must-revalidate',
+		'Content-Type' => 'application/json'
+	);
+
 	/**
 	 * @var Object Response Payload
 	 */
@@ -16,7 +24,7 @@ abstract class Kohana_Controller_Rest extends Controller
 	/**
 	 * @var array Response Metadata
 	 */
-	protected $_response_metadata = array('error' => FALSE);
+	protected $_response_metadata = array('error' => false);
 
 	/**
 	 * @var array Response Links
@@ -126,10 +134,12 @@ abstract class Kohana_Controller_Rest extends Controller
 	protected function _prepare_response()
 	{
 		// Should we prevent this request from being cached?
-		if ( ! in_array($this->request->method(), $this->_cacheable_methods))
+		if (in_array($this->request->method(), $this->_cacheable_methods))
 		{
-			$this->response->headers('cache-control', 'no-cache, no-store, max-age=0, must-revalidate');
+			$this->_response_headers['cache-control'] = 'cache, store';
 		}
+
+		$this->response->status($this->_response_code);
 
 		$this->_prepare_response_body();
 	}
@@ -143,14 +153,12 @@ abstract class Kohana_Controller_Rest extends Controller
 		{
 			if($this->_request_format == 'html')
 			{
-				$content_type = 'text/html';
+				$this->_response_headers['Content-Type'] = 'text/html';
 
 				$this->response->body($this->_response_payload);
 			}
 			else
 			{
-				$content_type = 'application/json';
-
 				$response = array (
 					'metadata' => $this->_response_metadata,
 					'links'    => $this->_response_links,
@@ -161,8 +169,11 @@ abstract class Kohana_Controller_Rest extends Controller
 				$this->response->body(json_encode($response));
 			}
 
-			// Set the correct content-type header
-			$this->response->headers('Content-Type', $content_type);
+			// Set the headers
+			foreach($this->_response_headers as $key => $value)
+			{
+				$this->response->headers($key, $value);
+			}
 
 		}
 		catch (Exception $e)
@@ -286,12 +297,12 @@ abstract class Kohana_Controller_Rest extends Controller
 
 	protected function _get_page()
 	{
-		$offset = Arr::get($_GET, 'offset', 1);
+		$offset = Arr::get($_GET, 'offset', 0);
 		$limit = Arr::get($_GET, 'limit', 100);
 
-		if($offset < 1)
+		if($offset < 0)
 		{
-			$offset = 1;
+			$offset = 0;
 		}
 
 		if($limit > 100)
