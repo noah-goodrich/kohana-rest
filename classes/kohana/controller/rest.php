@@ -234,19 +234,6 @@ abstract class Kohana_Controller_Rest extends Controller
 		}
 	}
 
-	protected function _link($method, $uri, $parameters = array(), $type = 'application/json')
-	{
-		strtr($uri, $parameters);
-
-		$link = array(
-			'method'     => $method,
-			'url'        => $uri,
-			'type'       => $type,
-		);
-
-		return $link;
-	}
-
 	protected function _get_page()
 	{
 		$offset = Arr::get($_GET, 'offset', 0);
