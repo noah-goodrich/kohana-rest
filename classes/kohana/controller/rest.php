@@ -19,17 +19,7 @@ abstract class Kohana_Controller_Rest extends Controller
 	/**
 	 * @var Object Response Payload
 	 */
-	protected $_response_payload = null;
-
-	/**
-	 * @var array Response Metadata
-	 */
-	protected $_response_metadata = array('error' => false);
-
-	/**
-	 * @var array Response Links
-	 */
-	protected $_response_links = array();
+	protected $_response = array('_links' => array());
 
 	/**
 	 * @var array Map of HTTP methods -> actions
@@ -141,32 +131,18 @@ abstract class Kohana_Controller_Rest extends Controller
 
 		$this->response->status($this->_response_code);
 
-		$this->_prepare_response_body();
-	}
-
-	/**
-	 * @todo Support more than just JSON
-	 */
-	protected function _prepare_response_body()
-	{
 		try
 		{
 			if($this->_request_format == 'html')
 			{
 				$this->_response_headers['Content-Type'] = 'text/html';
 
-				$this->response->body($this->_response_payload);
+				$this->response->body($this->_response);
 			}
 			else
 			{
-				$response = array (
-					'metadata' => $this->_response_metadata,
-					'links'    => $this->_response_links,
-					'payload'  => $this->_response_payload
-				);
-
 				// Format the reponse as JSON
-				$this->response->body(json_encode($response));
+				$this->response->body(json_encode($this->_response));
 			}
 
 			// Set the headers
@@ -213,7 +189,7 @@ abstract class Kohana_Controller_Rest extends Controller
 			catch (Exception $e)
 			{
 				$this->response->status(500);
-				$this->_response_payload = NULL;
+				$this->_response = NULL;
 			}
 		}
 		else
@@ -238,59 +214,35 @@ abstract class Kohana_Controller_Rest extends Controller
 		{
 			$this->response->status($e->getCode());
 
-			$this->_response_metadata = array(
+			$this->_response = array(
 				'error' => TRUE,
 				'type' => 'http',
-			);
-
-			$this->_response_payload = array(
 				'message' => $e->getMessage(),
 				'code'    => $e->getCode(),
 			);
-
-			$this->_response_links = array();
 		}
 		catch (Exception $e)
 		{
 			$this->response->status(500);
 
-			$this->_response_metadata = array(
+			$this->_response = array(
 				'error' => TRUE,
 				'type' => 'exception',
-			);
-
-			$this->_response_payload = array(
 				'message' => $e->getMessage(),
 				'code'    => $e->getCode(),
 			);
-
-			$this->_response_links = array();
 		}
 	}
 
-	protected function _link($method, $uri, $parameters = null, $type = null)
+	protected function _link($method, $uri, $parameters = array(), $type = 'application/json')
 	{
+		strtr($uri, $parameters);
+
 		$link = array(
 			'method'     => $method,
 			'url'        => $uri,
 			'type'       => $type,
-			'parameters' => array(),
 		);
-
-		if ($parameters !== NULL)
-		{
-			foreach ($parameters as $search => $replace)
-			{
-				if (is_numeric($search))
-				{
-					$link['parameters'][':'.$replace] = $replace;
-				}
-				else
-				{
-					$link['parameters'][$search] = $replace;
-				}
-			}
-		}
 
 		return $link;
 	}
