@@ -10,9 +10,14 @@ class Rest_URL extends Kohana_URL
 {
 	public static function link($method, $rel, $uri, $parameters = array(), $type = 'application/json')
 	{
-		$uri = URL::base().$uri;
+		$uri = URL::base(true).$uri;
 
-		strtr($uri, $parameters);
+		foreach($parameters as $key => $param)
+		{
+			$parameters[$key] = rawurlencode($param);
+		}
+
+		$uri = strtr($uri, $parameters);
 
 		$link = array(
 			'method'	=> $method,
