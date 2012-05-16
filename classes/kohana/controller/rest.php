@@ -30,6 +30,8 @@ abstract class Kohana_Controller_Rest extends Controller
 		Http_Request::GET    => 'get',
 		Http_Request::PUT    => 'put',    // Typically Update..
 		Http_Request::DELETE => 'delete',
+		Http_Request::OPTIONS => 'options', // Gets available methods for a resource
+		Http_Request::HEAD => 'head',
 		'PATCH'              => 'patch',
 	);
 
