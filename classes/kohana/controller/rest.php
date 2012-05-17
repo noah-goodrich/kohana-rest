@@ -95,7 +95,13 @@ abstract class Kohana_Controller_Rest extends Controller
 			$this->_parse_request_body();
 		}
 
-		$this->_request_format = $this->request->param('format');
+
+		$this->_request_format = $this->request->headers('Content-Type');
+
+		if(!$this->_request_format)
+		{
+			$this->_request_format = 'application/json';
+		}
 	}
 
 	/**
@@ -135,16 +141,20 @@ abstract class Kohana_Controller_Rest extends Controller
 
 		try
 		{
-			if($this->_request_format == 'html')
+			if($this->_request_format == 'text/html')
 			{
 				$this->_response_headers['Content-Type'] = 'text/html';
 
 				$this->response->body($this->_response);
 			}
-			else
+			elseif($this->_request_format == 'application/json')
 			{
 				// Format the reponse as JSON
 				$this->response->body(json_encode($this->_response));
+			}
+			else
+			{
+				throw new HTTP_Exception_405('Bad Content-Type');
 			}
 
 			// Set the headers

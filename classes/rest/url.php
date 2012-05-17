@@ -8,23 +8,34 @@
  */
 class Rest_URL extends Kohana_URL
 {
-	public static function link($method, $rel, $uri, $parameters = array(), $type = 'application/json')
+	public static function link(array $link)
 	{
-		$uri = URL::base(true).$uri;
+		$link['href'] = URL::base(true).$link['href'];
 
-		foreach($parameters as $key => $param)
+		if(isset($link['args']))
 		{
-			$parameters[$key] = rawurlencode($param);
+			foreach($link['args'] as $key => $param)
+			{
+				if(is_callable($param))
+				{
+					$param = $param();
+				}
+				
+				$link['args'][$key] = rawurlencode($param);
+			}
+
+			$link['href'] = strtr($link['href'], $link['args']);
 		}
 
-		$uri = strtr($uri, $parameters);
+		if(!isset($link['type']))
+		{
+			$link['type'] = 'application/json';
+		}
 
-		$link = array(
-			'method'	=> $method,
-			'rel'		=> $rel,
-			'url'		=> $uri,
-			'type'		=> $type,
-		);
+		if(!isset($link['method']))
+		{
+			$link['method'] = 'GET';
+		}
 
 		return $link;
 	}
