@@ -95,8 +95,7 @@ abstract class Kohana_Controller_Rest extends Controller
 			$this->_parse_request_body();
 		}
 
-
-		$this->_request_format = $this->request->headers('Content-Type');
+		$this->_request_format = $this->request->headers('Accept');
 
 		if(!$this->_request_format)
 		{
