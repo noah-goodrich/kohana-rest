@@ -12,7 +12,7 @@ abstract class Kohana_Controller_Rest extends Controller
 
 	protected $_response_headers = array
 	(
-		'cache-control' => 'no-cache, no-store, max-age=0, must-revalidate',
+		'Cache-Control' => 'no-cache, no-store, max-age=0, must-revalidate',
 		'Content-Type' => 'application/json'
 	);
 
@@ -35,6 +35,12 @@ abstract class Kohana_Controller_Rest extends Controller
 		'PATCH'              => 'patch',
 	);
 
+	protected $_formats = array
+	(
+		'application/json',
+		'text/html'
+	);
+
 	/**
 	 * @var array List of HTTP methods which support body content
 	 */
@@ -52,20 +58,6 @@ abstract class Kohana_Controller_Rest extends Controller
 	(
 		Http_Request::GET,
 	);
-
-	public function before()
-	{
-		parent::before();
-
-		$this->_parse_request();
-	}
-
-	public function after()
-	{
-		$this->_prepare_response();
-
-		parent::after();
-	}
 
 	/**
 	 * Parse the request...
@@ -90,83 +82,36 @@ abstract class Kohana_Controller_Rest extends Controller
 		}
 
 		// Are we be expecting body content as part of the request?
-		if (in_array($this->request->method(), $this->_methods_with_body_content))
+		if (in_array($this->request->method(), $this->_methods_with_body_content) AND $this->request->body() != '')
 		{
-			$this->_parse_request_body();
+			try
+			{
+				$this->_request_payload = json_decode($this->request->body(), TRUE);
+
+				if ( ! is_array($this->_request_payload) AND ! is_object($this->_request_payload))
+					throw new Http_Exception_400('Invalid json supplied. \':json\'', array(
+						':json' => $this->request->body(),
+					));
+			}
+			catch (Exception $e)
+			{
+				throw new Http_Exception_400('Invalid json supplied. \':json\'', array(
+					':json' => $this->request->body(),
+				));
+			}
 		}
 
 		$this->_request_format = $this->request->headers('Accept');
 
-		if(!$this->_request_format)
+		if(!$this->_request_format OR $this->_request_format == '/')
 		{
 			$this->_request_format = 'application/json';
 		}
-	}
-
-	/**
-	 * @todo Support more than just JSON
-	 */
-	protected function _parse_request_body()
-	{
-		if ($this->request->body() == '')
-			return;
-
-		try
+		elseif(!in_array($this->_request_format, $this->_formats))
 		{
-			$this->_request_payload = json_decode($this->request->body(), TRUE);
+			$this->_request_format = 'application/json';
 
-			if ( ! is_array($this->_request_payload) AND ! is_object($this->_request_payload))
-				throw new Http_Exception_400('Invalid json supplied. \':json\'', array(
-					':json' => $this->request->body(),
-				));
-		}
-		catch (Exception $e)
-		{
-			throw new Http_Exception_400('Invalid json supplied. \':json\'', array(
-				':json' => $this->request->body(),
-			));
-		}
-	}
-
-	protected function _prepare_response()
-	{
-		// Should we prevent this request from being cached?
-		if (in_array($this->request->method(), $this->_cacheable_methods))
-		{
-			$this->_response_headers['cache-control'] = 'cache, store';
-		}
-
-		$this->response->status($this->_response_code);
-
-		try
-		{
-			if($this->_request_format == 'text/html')
-			{
-				$this->_response_headers['Content-Type'] = 'text/html';
-
-				$this->response->body($this->_response);
-			}
-			elseif($this->_request_format == 'application/json')
-			{
-				// Format the reponse as JSON
-				$this->response->body(json_encode($this->_response));
-			}
-			else
-			{
-				throw new HTTP_Exception_405('Bad Content-Type');
-			}
-
-			// Set the headers
-			foreach($this->_response_headers as $key => $value)
-			{
-				$this->response->headers($key, $value);
-			}
-
-		}
-		catch (Exception $e)
-		{
-			Kohana::$log->add(Log::ERROR, 'Error while formatting response: '.$e->getMessage());
-			throw new Http_Exception_500('Error while formatting response');
+			throw new HTTP_Exception_405('Bad Content-Type: '.$this->request->headers('Accept'));
 		}
 	}
 
@@ -175,55 +120,42 @@ abstract class Kohana_Controller_Rest extends Controller
 	 */
 	public function action_index()
 	{
-		// Get the basic verb based action..
-		$action = $this->_action_map[$this->request->method()];
-
-		// If this is a custom action, lets make sure we use it.
-		if ($this->request->param('custom', FALSE) !== FALSE)
-		{
-			$action .= '_'.$this->request->param('custom');
-		}
-
-		// If we are acting on a collection, append _collection to the action name.
-		if ($this->request->param('id', FALSE) === FALSE)
-		{
-			$action .= '_collection';
-		}
-
-		// Execute the request
-		if (method_exists($this, $action))
-		{
-			try
-			{
-				$this->_execute($action);
-			}
-			catch (Exception $e)
-			{
-				$this->response->status(500);
-				$this->_response = NULL;
-			}
-		}
-		else
-		{
-			/**
-			 * @todo .. HTTP_Exception_405 is more appropriate, sometimes.
-			 * Need to figure out a way to decide which to send...
-			 */
-			throw new HTTP_Exception_404('The requested URL :uri was not found on this server.', array(
-				':uri' => $this->request->uri()
-			));
-		}
-	}
-
-	protected function _execute($action)
-	{
 		try
 		{
-			$this->{$action}();
+			$this->_parse_request();
+
+			// Get the basic verb based action..
+			$action = $this->_action_map[$this->request->method()];
+
+			// If we are acting on a collection, append _collection to the action name.
+			if ($this->request->param('id', FALSE) === FALSE)
+			{
+				$action .= '_collection';
+			}
+
+			if (method_exists($this, $action))
+			{
+				try
+				{
+					$this->{$action}();
+				}
+				catch (Exception $e)
+				{
+					$this->response->status(500);
+					$this->_response = NULL;
+				}
+			}
+			else
+			{
+				throw new HTTP_Exception_404('The requested URL :uri was not found on this server.', array(
+					':uri' => $this->request->uri()
+				));
+			}
+
 		}
 		catch (HTTP_Exception $e)
 		{
-			$this->response->status($e->getCode());
+			$this->_response_code = $e->getCode();
 
 			$this->_response = array(
 				'error' => TRUE,
@@ -234,7 +166,7 @@ abstract class Kohana_Controller_Rest extends Controller
 		}
 		catch (Exception $e)
 		{
-			$this->response->status(500);
+			$this->_response_code = 500;
 
 			$this->_response = array(
 				'error' => TRUE,
@@ -242,6 +174,48 @@ abstract class Kohana_Controller_Rest extends Controller
 				'message' => $e->getMessage(),
 				'code'    => $e->getCode(),
 			);
+		}
+
+		if($this->_request_format == 'text/html')
+		{
+			$this->_response_headers['Content-Type'] = 'text/html';
+		}
+		elseif($this->_request_format == 'application/json')
+		{
+			// Format the reponse as JSON
+			$this->_response = json_encode($this->_response);
+		}
+
+		if(!is_string($this->_response))
+		{
+			$this->_response_headers['Content-Type'] = 'application/json';
+			$this->_response_code = 500;
+			$this->_response = json_encode
+			(
+				array
+				(
+					'error' => true,
+					'type' => 'exception',
+					'message' => 'Error formatting response',
+					'code' => 500
+				)
+			);
+		}
+
+		$this->response->body($this->_response);
+
+		// Should we prevent this request from being cached?
+		if (in_array($this->request->method(), $this->_cacheable_methods))
+		{
+			$this->_response_headers['cache-control'] = 'cache, store';
+		}
+
+		$this->response->status($this->_response_code);
+
+		// Set the headers
+		foreach($this->_response_headers as $key => $value)
+		{
+			$this->response->headers($key, $value);
 		}
 	}
 
