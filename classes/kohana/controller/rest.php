@@ -101,13 +101,23 @@ abstract class Kohana_Controller_Rest extends Controller
 			}
 		}
 
-		$this->_request_format = $this->request->headers('Accept');
+		$accepted_formats = explode(',',$this->request->headers('Accept'));
 
-		if(!$this->_request_format OR $this->_request_format == '/')
+		if(!count($accepted_formats) OR current($accepted_formats) == '/')
 		{
-			$this->_request_format = 'application/json';
+			$accepted_formats = array('application/json');
 		}
-		elseif(!in_array($this->_request_format, $this->_formats))
+
+		foreach($accepted_formats as $format)
+		{
+			if(in_array($format, $this->_formats))
+			{
+				$this->_request_format = $format;
+				break;
+			}
+		}
+
+		if(!$this->_request_format)
 		{
 			$this->_request_format = 'application/json';
 
@@ -179,6 +189,11 @@ abstract class Kohana_Controller_Rest extends Controller
 		if($this->_request_format == 'text/html')
 		{
 			$this->_response_headers['Content-Type'] = 'text/html';
+
+			if(is_array($this->_response))
+			{
+				$this->_response = \Debug::vars($this->_response);
+			}
 		}
 		elseif($this->_request_format == 'application/json')
 		{
