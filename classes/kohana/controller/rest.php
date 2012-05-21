@@ -203,6 +203,8 @@ abstract class Kohana_Controller_Rest extends Controller
 
 		if(!is_string($this->_response))
 		{
+			Kohana::$log->add(Log::ERROR, "Error while formatting response: \n".print_r($this->_response, true));
+
 			$this->_response_headers['Content-Type'] = 'application/json';
 			$this->_response_code = 500;
 			$this->_response = json_encode
