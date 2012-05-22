@@ -145,15 +145,7 @@ abstract class Kohana_Controller_Rest extends Controller
 
 			if (method_exists($this, $action))
 			{
-				try
-				{
-					$this->{$action}();
-				}
-				catch (Exception $e)
-				{
-					$this->response->status(500);
-					$this->_response = NULL;
-				}
+				$this->{$action}();
 			}
 			else
 			{
