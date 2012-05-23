@@ -20,8 +20,8 @@ class Rest_URL extends Kohana_URL
 				{
 					$param = $param();
 				}
-				
-				$link['args'][$key] = rawurlencode($param);
+
+				$link['args'][$key] = $param;
 			}
 
 			$link['href'] = strtr($link['href'], $link['args']);
