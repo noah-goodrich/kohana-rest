@@ -76,7 +76,7 @@ abstract class Kohana_Controller_Rest extends Controller
 		{
 			// TODO .. add to the if (maybe??) .. method_exists($this, 'action_'.$this->request->method())
 			throw new Http_Exception_405('The :method method is not supported. Supported methods are :allowed_methods', array(
-				':method'          => $method,
+				':method'          => $this->request->method(),
 				':allowed_methods' => implode(', ', array_keys($this->_action_map)),
 			));
 		}
