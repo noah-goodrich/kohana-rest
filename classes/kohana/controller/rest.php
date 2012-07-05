@@ -149,8 +149,9 @@ abstract class Kohana_Controller_Rest extends Controller
 			}
 			else
 			{
-				throw new HTTP_Exception_404('The requested URL :uri was not found on this server.', array(
-					':uri' => $this->request->uri()
+				throw new HTTP_Exception_404('The requested URL :uri with :action method was not found on this server.', array(
+					':uri' => $this->request->uri(),
+					':action' => $action
 				));
 			}
 
