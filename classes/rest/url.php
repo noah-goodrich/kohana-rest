@@ -10,7 +10,10 @@ class Rest_URL extends Kohana_URL
 {
 	public static function link(array $link)
 	{
-		$link['href'] = URL::base(true).$link['href'];
+		if(Request::current()->is_external())
+		{
+			$link['href'] = URL::base(true).$link['href'];
+		}
 
 		if(isset($link['args']))
 		{
