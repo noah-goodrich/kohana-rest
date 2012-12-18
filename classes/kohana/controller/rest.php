@@ -1,6 +1,8 @@
 <?php
 abstract class Kohana_Controller_Rest extends Controller
 {
+	protected $_action;
+
 	/**
 	 * @var Object Request Payload
 	 */
@@ -123,6 +125,23 @@ abstract class Kohana_Controller_Rest extends Controller
 
 			throw new HTTP_Exception_405('Bad Content-Type: '.$this->request->headers('Accept'));
 		}
+
+		// Get the basic verb based action..
+		$this->_action = $this->_action_map[$this->request->method()];
+
+		// If we are acting on a collection, append _collection to the action name.
+		if ($this->request->param('id', FALSE) === FALSE)
+		{
+			$this->_action .= '_collection';
+		}
+
+		if (!method_exists($this, $this->_action))
+		{
+			throw new HTTP_Exception_404('The requested URL :uri with :action method was not found on this server.', array(
+				':uri' => $this->request->uri(),
+				':action' => $this->_action
+			));
+		}
 	}
 
 	/**
@@ -134,26 +153,7 @@ abstract class Kohana_Controller_Rest extends Controller
 		{
 			$this->_parse_request();
 
-			// Get the basic verb based action..
-			$action = $this->_action_map[$this->request->method()];
-
-			// If we are acting on a collection, append _collection to the action name.
-			if ($this->request->param('id', FALSE) === FALSE)
-			{
-				$action .= '_collection';
-			}
-
-			if (method_exists($this, $action))
-			{
-				$this->{$action}();
-			}
-			else
-			{
-				throw new HTTP_Exception_404('The requested URL :uri with :action method was not found on this server.', array(
-					':uri' => $this->request->uri(),
-					':action' => $action
-				));
-			}
+			$this->{$this->_action}();
 
 		}
 		catch (HTTP_Exception $e)
