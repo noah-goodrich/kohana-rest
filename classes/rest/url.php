@@ -15,7 +15,7 @@ class Rest_URL extends Kohana_URL
 
 	public static function link(array $link)
 	{
-		if(!Request::$current instanceof Request_Client_Internal)
+		if(!(Request::$current->client() instanceof Request_Client_Internal))
 		{
 			if(!Rest_URL::is_absolute($link['href']))
 			{
