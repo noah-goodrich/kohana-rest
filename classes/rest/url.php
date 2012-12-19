@@ -8,11 +8,20 @@
  */
 class Rest_URL extends Kohana_URL
 {
+	public static function is_absolute($url)
+	{
+		return strpos($url, '://') !== false;
+	}
+
 	public static function link(array $link)
 	{
-		if(function_exists('apache_request_headers'))
+		if(!Request::$current instanceof Request_Client_Internal)
 		{
-			$link['href'] = URL::base(true).$link['href'];
+			if(!Rest_URL::is_absolute($link['href']))
+			{
+				$link['href'] = URL::base(true).$link['href'];
+			}
+
 		}
 
 		if(isset($link['args']))
