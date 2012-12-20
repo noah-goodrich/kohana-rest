@@ -15,11 +15,11 @@ class Rest_URL extends Kohana_URL
 
 	public static function link(array $link)
 	{
-		if(!(Request::$current->client() instanceof Request_Client_Internal))
+		if(Request::$current->referrer() != 'internal')
 		{
 			if(!Rest_URL::is_absolute($link['href']))
 			{
-				$link['href'] = URL::base(true).$link['href'];
+				$link['href'] = URL::site($link['href'], true, false);
 			}
 
 		}
